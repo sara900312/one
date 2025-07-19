@@ -114,8 +114,10 @@ const OrdersList: React.FC<OrdersListProps> = ({ refreshTrigger }) => {
       });
 
       if (error) {
-        console.error("Assign Order Error:", error);
-        toast.error("فشل في تعيين الطلب");
+        await handleError("تعيين الطلب", error, {
+          context: { orderId, storeId, userId: user.id },
+          fallbackMessage: "فشل في تعيين الطلب",
+        });
         return;
       }
 
@@ -124,11 +126,23 @@ const OrdersList: React.FC<OrdersListProps> = ({ refreshTrigger }) => {
         toast.success(response.message || "تم تعيين الطلب بنجاح");
         fetchOrders();
       } else {
-        toast.error(response?.error || "فشل في تعيين الطلب");
+        await handleError(
+          "تعيين الطلب",
+          {
+            message: response?.error,
+            response: formatError(response),
+          },
+          {
+            context: { orderId, storeId, response },
+            fallbackMessage: "فشل في تعيين الطلب",
+          },
+        );
       }
     } catch (error) {
-      console.error("Assign Order Error:", error);
-      toast.error("حدث خطأ في تعيين الطلب");
+      await handleError("تعيين الطلب", error, {
+        context: { orderId, storeId, userId: user.id },
+        fallbackMessage: "حدث خطأ في تعيين الطلب",
+      });
     } finally {
       setAssigningOrders((prev) => {
         const newSet = new Set(prev);
