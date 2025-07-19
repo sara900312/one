@@ -166,8 +166,10 @@ const OrdersList: React.FC<OrdersListProps> = ({ refreshTrigger }) => {
       });
 
       if (error) {
-        console.error("Update Order Status Error:", error);
-        toast.error("فشل في تحديث حالة الطلب");
+        await handleError("تحديث حالة الطلب", error, {
+          context: { orderId, newStatus, storeId: user.store_id },
+          fallbackMessage: "فشل في تحديث حالة الطلب",
+        });
         return;
       }
 
@@ -176,11 +178,23 @@ const OrdersList: React.FC<OrdersListProps> = ({ refreshTrigger }) => {
         toast.success(response.message || "تم تحديث حالة الطلب بنجاح");
         fetchOrders();
       } else {
-        toast.error(response?.error || "فشل في تحديث حالة الطلب");
+        await handleError(
+          "تحديث حالة الطلب",
+          {
+            message: response?.error,
+            response: formatError(response),
+          },
+          {
+            context: { orderId, newStatus, response },
+            fallbackMessage: "فشل في تحديث حالة الطلب",
+          },
+        );
       }
     } catch (error) {
-      console.error("Update Order Status Error:", error);
-      toast.error("حدث خطأ في تحديث حالة الطلب");
+      await handleError("تحديث حالة الطلب", error, {
+        context: { orderId, newStatus, storeId: user.store_id },
+        fallbackMessage: "حدث خطأ في تحديث حالة الطلب",
+      });
     }
   };
 
