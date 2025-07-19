@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { addProductManual } from "@/utils/productHelpers";
 import { handleError } from "@/utils/errorHelpers";
+import { checkUserPermissions } from "@/utils/authHelpers";
 
 interface AddProductManualProps {
   onProductAdded: () => void;
@@ -48,17 +49,39 @@ const AddProductManual: React.FC<AddProductManualProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. فحص الحقول المطلوبة
     if (!formData.name || !formData.price || !formData.store_name) {
       toast.error("يرجى ملء الحقول المطلوبة");
       return;
     }
 
+    // 2. فحص المصادقة
     if (!user?.id) {
-      toast.error("خطأ في المصادقة");
+      toast.error("يرجى تسجيل الدخول أولاً");
+      return;
+    }
+
+    // 3. فحص الصلاحيات
+    try {
+      const permissions = await checkUserPermissions();
+      if (!permissions.canCreateProducts) {
+        toast.error(
+          `غير مصرح لك بإضافة منتجات. دورك الحالي: ${permissions.userRole}`,
+        );
+        return;
+      }
+    } catch (error) {
+      console.error("خطأ في فحص الصلاحيات:", error);
+      toast.error("خطأ في التحقق من الصلاحيات");
       return;
     }
 
     setLoading(true);
+    console.log("📝 محاولة إضافة منتج:", {
+      productName: formData.name,
+      userId: user.id,
+      storeName: formData.store_name,
+    });
 
     try {
       const response = await addProductManual({
