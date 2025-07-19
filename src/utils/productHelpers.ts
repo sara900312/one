@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ApiResponse } from "@/types/database";
+import { formatError, logError } from "@/utils/errorHelpers";
 
 interface AddProductManualParams {
   p_name: string;
@@ -45,10 +46,11 @@ export const addProductManual = async (
       .single();
 
     if (error) {
-      console.error("Product insert error:", error);
+      const formattedError = formatError(error);
+      logError("إضافة منتج يدوي", error, { params });
       return {
         success: false,
-        error: "فشل في إضافة المنتج: " + error.message,
+        error: formattedError.message || "فشل في إضافة المنتج",
       };
     }
 
@@ -58,10 +60,11 @@ export const addProductManual = async (
       data: data,
     };
   } catch (error) {
-    console.error("Product add error:", error);
+    const formattedError = formatError(error);
+    logError("إضافة منتج يدوي - خطأ عام", error, { params });
     return {
       success: false,
-      error: "حدث خطأ غير متوقع",
+      error: formattedError.message || "حدث خطأ غير متوقع أثناء إضافة المنتج",
     };
   }
 };
@@ -108,10 +111,14 @@ export const addProductAI = async (
       .single();
 
     if (error) {
-      console.error("AI Product insert error:", error);
+      const formattedError = formatError(error);
+      logError("إضافة منتج بالذكاء الاصطناعي", error, {
+        params,
+        parsedData: { name, price, quantity, storeName },
+      });
       return {
         success: false,
-        error: "فشل في إضافة المن��ج: " + error.message,
+        error: formattedError.message || "فشل في إضافة المنتج",
       };
     }
 
@@ -129,10 +136,13 @@ export const addProductAI = async (
       },
     };
   } catch (error) {
-    console.error("AI Product add error:", error);
+    const formattedError = formatError(error);
+    logError("إضافة منتج بالذكاء الاصطناعي - خطأ عام", error, { params });
     return {
       success: false,
-      error: "حدث خطأ غير متوقع",
+      error:
+        formattedError.message ||
+        "حدث خطأ غير متوقع أثناء معالجة المنتج بالذكاء الاصطناعي",
     };
   }
 };
