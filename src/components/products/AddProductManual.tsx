@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { addProductManual } from "@/utils/productHelpers";
+import { handleError } from "@/utils/errorHelpers";
 
 interface AddProductManualProps {
   onProductAdded: () => void;
@@ -90,11 +91,30 @@ const AddProductManual: React.FC<AddProductManualProps> = ({
         });
         onProductAdded();
       } else {
-        toast.error(response?.error || "فشل في إضافة المنتج");
+        await handleError(
+          "إضافة منتج يدوي",
+          { message: response?.error },
+          {
+            context: {
+              productName: formData.name,
+              storeName: formData.store_name,
+            },
+            fallbackMessage: "فشل في إضافة المنتج",
+          },
+        );
       }
     } catch (error) {
-      console.error("Manual Product Error:", error);
-      toast.error("حدث خطأ غير متوقع");
+      await handleError("إضافة منتج يدوي", error, {
+        context: {
+          formData: {
+            ...formData,
+            // Remove sensitive data from logs
+            price: formData.price ? "SET" : "EMPTY",
+            quantity: formData.quantity ? "SET" : "EMPTY",
+          },
+        },
+        fallbackMessage: "حدث خطأ غير متوقع أثناء إضافة المنتج",
+      });
     } finally {
       setLoading(false);
     }
