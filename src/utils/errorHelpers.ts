@@ -320,3 +320,53 @@ export async function validateResponse(response: Response): Promise<any> {
     throw new Error("فشل في قراءة استجابة الخادم");
   }
 }
+
+/**
+ * مثال على الاستخدام المطلوب - جلب المتاجر مع معالجة الأخطاء المحسنة
+ * Example usage - fetch stores with improved error handling
+ */
+export async function fetchStoresExample() {
+  try {
+    const response = await fetch("/api/stores");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP error ${response.status}`);
+    }
+    const stores = await response.json();
+    console.log("Stores fetched:", stores);
+    return stores;
+  } catch (error) {
+    // استخدام دالة formatError لتحويل الخطأ إلى نص قابل للقراءة
+    const formattedErrorText = formatError(error);
+    console.error("Fetch Stores Error:", formattedErrorText.technical);
+
+    // عرض الخطأ للمستخدم
+    if (typeof window !== "undefined") {
+      alert(`خطأ في جلب المتاجر: ${formattedErrorText.message}`);
+    }
+
+    return null;
+  }
+}
+
+/**
+ * دالة مساعدة لطباعة أو إظهار الخطأ بشكل واضح (كما طلب المستخدم)
+ * Helper function to print or display error clearly (as requested by user)
+ */
+export function formatErrorSimple(error: any): string {
+  if (!error) return "Unknown error";
+
+  // لو الخطأ يحتوي على خاصية message
+  if (error.message) return error.message;
+
+  // لو الخطأ هو رد من API مع JSON
+  if (typeof error === "object") {
+    try {
+      return JSON.stringify(error, null, 2);
+    } catch {
+      return String(error);
+    }
+  }
+
+  return String(error);
+}
