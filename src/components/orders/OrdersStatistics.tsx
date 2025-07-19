@@ -1,48 +1,55 @@
-import React, { useState, useEffect } from 'react'
-import { StatsCard } from '@/components/ui/stats-card'
-import { supabase } from '@/integrations/supabase/client'
-import { OrderStatistics } from '@/types/database'
-import { toast } from 'sonner'
+import React, { useState, useEffect } from "react";
+import { StatsCard } from "@/components/ui/stats-card";
+import { supabase } from "@/integrations/supabase/client";
+import { OrderStatistics } from "@/types/database";
+import { toast } from "sonner";
+import { handleError } from "@/utils/errorHelpers";
 
 interface OrdersStatisticsProps {
-  refreshTrigger: number
+  refreshTrigger: number;
 }
 
-const OrdersStatistics: React.FC<OrdersStatisticsProps> = ({ refreshTrigger }) => {
+const OrdersStatistics: React.FC<OrdersStatisticsProps> = ({
+  refreshTrigger,
+}) => {
   const [stats, setStats] = useState<OrderStatistics>({
     total_orders: 0,
     pending_orders: 0,
     assigned_orders: 0,
     delivered_orders: 0,
-    returned_orders: 0
-  })
-  const [loading, setLoading] = useState(true)
+    returned_orders: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStatistics()
-  }, [refreshTrigger])
+    fetchStatistics();
+  }, [refreshTrigger]);
 
   const fetchStatistics = async () => {
     try {
-      setLoading(true)
-      const { data, error } = await supabase.rpc('get_orders_statistics')
+      setLoading(true);
+      const { data, error } = await supabase.rpc("get_orders_statistics");
 
       if (error) {
-        console.error('Fetch Statistics Error:', error)
-        toast.error('فشل في تحميل الإحصائيات')
-        return
+        await handleError("تحميل إحصائيات الطلبات", error, {
+          context: { operation: "get_orders_statistics" },
+          fallbackMessage: "فشل في تحميل الإحصائيات",
+        });
+        return;
       }
 
       if (data && data.length > 0) {
-        setStats(data[0])
+        setStats(data[0]);
       }
     } catch (error) {
-      console.error('Fetch Statistics Error:', error)
-      toast.error('حدث خطأ في تحميل الإحصائيات')
+      await handleError("تحميل إحصائيات الطلبات", error, {
+        context: { operation: "statistics_general_error" },
+        fallbackMessage: "حدث خطأ في تحميل الإحصائيات",
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -51,7 +58,7 @@ const OrdersStatistics: React.FC<OrdersStatisticsProps> = ({ refreshTrigger }) =
           <div key={i} className="h-24 bg-muted animate-pulse rounded-lg"></div>
         ))}
       </div>
-    )
+    );
   }
 
   return (
@@ -82,7 +89,7 @@ const OrdersStatistics: React.FC<OrdersStatisticsProps> = ({ refreshTrigger }) =
         variant="destructive"
       />
     </div>
-  )
-}
+  );
+};
 
-export default OrdersStatistics
+export default OrdersStatistics;
